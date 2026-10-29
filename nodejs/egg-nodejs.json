@@ -73,7 +73,7 @@
         },
         {
             "name": "Install dependencies",
-            "description": "Install the dependencies from package.json every time the server starts.",
+            "description": "Install the dependencies from package.json when the server starts. Skipped when nothing changed since the last install; delete node_modules to force a clean install.",
             "env_variable": "INSTALL_DEPS",
             "default_value": "1",
             "user_viewable": true,
@@ -82,7 +82,7 @@
         },
         {
             "name": "Package manager",
-            "description": "Package manager for installing dependencies. Auto picks one from the lockfile and falls back to npm.",
+            "description": "Package manager for installing dependencies. Auto uses the packageManager field in package.json (any pnpm or Yarn version), then the lockfile, then npm.",
             "env_variable": "PACKAGE_MANAGER",
             "default_value": "auto",
             "user_viewable": true,
@@ -91,12 +91,12 @@
         },
         {
             "name": "Main file",
-            "description": "File to start with Node.js, for example index.js or src/bot.ts.",
+            "description": "File to start with Node.js, for example index.js or src/bot.ts. Leave empty to use the start script from package.json, then its main file, then index.js.",
             "env_variable": "MAIN_FILE",
-            "default_value": "index.js",
+            "default_value": "",
             "user_viewable": true,
             "user_editable": true,
-            "rules": "required|string|regex:/^[\\w.\\/-]{1,128}$/"
+            "rules": "nullable|string|regex:/^[\\w.\\/-]{1,128}$/"
         },
         {
             "name": "Node.js arguments",
@@ -109,7 +109,7 @@
         },
         {
             "name": "Start command",
-            "description": "Custom command to run instead of the main file, for example npm run start. Leave empty to start the main file.",
+            "description": "Custom command to run instead of the main file, for example npm run build && npm start. Leave empty to start the main file.",
             "env_variable": "START_COMMAND",
             "default_value": "",
             "user_viewable": true,

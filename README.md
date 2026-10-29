@@ -16,8 +16,10 @@ Download the egg's JSON file, then import it in the panel's admin area under **E
 ## Node.js
 
 The server starts with `start-app` from the image. On every start it can pull the latest commit from a Git
-repository, installs dependencies with npm, pnpm or Yarn (picked from the lockfile), prints
-`[System] App starting` and runs the main file or a custom start command.
+repository, installs dependencies with npm, pnpm or Yarn when they changed, prints `[System] App starting`
+and starts the app. With no main file or start command set, it runs the project's `start` script, then the
+`main` file from `package.json`, then `index.js` (or `.mjs`, `.cjs`, `.ts`). See the
+[yolks README](https://github.com/ArtiomsHosting/yolks#start-app-nodejs-images) for the details.
 
 On install the egg clones the Git repository if one is set, or writes a starter `index.js` that serves a page
 on the server's port. A reinstall never deletes files: it fast-forwards an existing checkout and leaves other
@@ -29,13 +31,14 @@ files alone.
 | Git branch (`BRANCH`) | empty | Branch to clone, or the default branch |
 | Git username, access token (`GIT_USERNAME`, `GIT_TOKEN`) | empty | Credentials for private repositories, never written to `.git/config` |
 | Auto update (`AUTO_UPDATE`) | off | Pull the latest commit on every start |
-| Install dependencies (`INSTALL_DEPS`) | on | Install from `package.json` on every start |
-| Package manager (`PACKAGE_MANAGER`) | auto | `npm`, `pnpm` or `yarn`; auto picks from the lockfile |
-| Main file (`MAIN_FILE`) | `index.js` | File started with Node.js; `.ts` files work through Node's type stripping |
+| Install dependencies (`INSTALL_DEPS`) | on | Install from `package.json` on start, skipped when nothing changed |
+| Package manager (`PACKAGE_MANAGER`) | auto | `npm`, `pnpm` or `yarn`; auto uses `packageManager` in `package.json`, then the lockfile |
+| Main file (`MAIN_FILE`) | empty | File started with Node.js; empty = zero-config start; `.ts` works through Node's type stripping |
 | Node.js arguments (`NODE_ARGS`) | empty | Extra arguments for Node.js |
-| Start command (`START_COMMAND`) | empty | Runs instead of the main file, for example `npm run start` |
+| Start command (`START_COMMAND`) | empty | Runs instead of the main file, for example `npm run build && npm start` |
 
-Apps should listen on `0.0.0.0` and the port in the `SERVER_PORT` environment variable.
+The app gets `PORT` (the server's port), `HOST=0.0.0.0` and `NODE_ENV=production` unless its own `.env`
+defines them, and a Node.js heap limit of 75% of the server's memory. Apps should listen on `HOST:PORT`.
 
 ## Contributing
 
