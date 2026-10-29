@@ -6,7 +6,7 @@ your own panel.
 
 | Egg | Images | Import |
 | --- | --- | --- |
-| Node.js | Node.js 26 | [`nodejs/egg-nodejs.json`](nodejs/egg-nodejs.json) |
+| Node.js | Node.js 26, 24, 22, 20 (end of life) | [`nodejs/egg-nodejs.json`](nodejs/egg-nodejs.json) |
 
 ## Importing
 
@@ -33,7 +33,7 @@ alone.
 | Auto update (`AUTO_UPDATE`) | off | Pull the latest commit on every start |
 | Install dependencies (`INSTALL_DEPS`) | on | Install from `package.json` on start, skipped when nothing changed |
 | Package manager (`PACKAGE_MANAGER`) | auto | `npm`, `pnpm` or `yarn`; auto uses `packageManager` in `package.json`, then the lockfile |
-| Main file (`MAIN_FILE`) | empty | File started with Node.js; empty = zero-config start; `.ts` works through Node's type stripping |
+| Main file (`MAIN_FILE`) | empty | File started with Node.js; empty = zero-config start; `.ts` works through Node's type stripping on Node.js 22 and newer |
 | Node.js arguments (`NODE_ARGS`) | empty | Extra arguments for Node.js |
 | Start command (`START_COMMAND`) | empty | Runs instead of the main file, for example `npm run build && npm start` |
 

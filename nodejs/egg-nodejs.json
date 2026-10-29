@@ -8,7 +8,10 @@
     "description": "Runs a Node.js app or script from uploaded files or a Git repository. Dependencies are installed with npm, pnpm or Yarn when the server starts.",
     "features": null,
     "docker_images": {
-        "Node.js 26": "ghcr.io/artiomshosting/yolks:nodejs_26"
+        "Node.js 26": "ghcr.io/artiomshosting/yolks:nodejs_26",
+        "Node.js 24": "ghcr.io/artiomshosting/yolks:nodejs_24",
+        "Node.js 22": "ghcr.io/artiomshosting/yolks:nodejs_22",
+        "Node.js 20 (end of life)": "ghcr.io/artiomshosting/yolks:nodejs_20"
     },
     "file_denylist": [],
     "startup": "start-app",
@@ -91,7 +94,7 @@
         },
         {
             "name": "Main file",
-            "description": "File to start with Node.js, for example index.js or src/bot.ts. Leave empty to use the start script from package.json, then its main file, then index.js.",
+            "description": "File to start with Node.js, for example index.js or src/bot.ts (TypeScript needs Node.js 22 or newer). Leave empty to use the start script from package.json, then its main file, then index.js.",
             "env_variable": "MAIN_FILE",
             "default_value": "",
             "user_viewable": true,
