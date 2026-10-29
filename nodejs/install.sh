@@ -18,30 +18,11 @@ git_with_credentials() {
     git "${options[@]}" "$@"
 }
 
-write_starter_app() {
-    cat > index.js <<'EOF'
-const http = require('node:http');
-
-const port = Number(process.env.SERVER_PORT) || 3000;
-
-http.createServer((request, response) => {
-    response.end('Your Node.js server is running. Upload your files or set a Git repository to replace this page.\n');
-}).listen(port, '0.0.0.0', () => {
-    console.log(`Listening on port ${port}`);
-});
-EOF
-}
-
 mkdir -p /mnt/server
 cd /mnt/server
 
 if [[ -z "${GIT_ADDRESS:-}" ]]; then
-    if [[ -z "$(ls -A)" ]]; then
-        write_starter_app
-        log 'Created a starter index.js. Upload your files or set a Git repository and reinstall.'
-    else
-        log 'No Git repository set, keeping the existing files.'
-    fi
+    log 'No Git repository set. Upload your files, or set a Git repository and reinstall.'
     exit 0
 fi
 

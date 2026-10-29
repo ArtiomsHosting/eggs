@@ -21,9 +21,9 @@ and starts the app. With no main file or start command set, it runs the project'
 `main` file from `package.json`, then `index.js` (or `.mjs`, `.cjs`, `.ts`). See the
 [yolks README](https://github.com/ArtiomsHosting/yolks#start-app-nodejs-images) for the details.
 
-On install the egg clones the Git repository if one is set, or writes a starter `index.js` that serves a page
-on the server's port. A reinstall never deletes files: it fast-forwards an existing checkout and leaves other
-files alone.
+On install the egg clones the Git repository if one is set; otherwise the server starts empty and you upload
+your files. A reinstall never deletes files: it fast-forwards an existing checkout and leaves other files
+alone.
 
 | Variable | Default | Description |
 | --- | --- | --- |
