@@ -1,0 +1,123 @@
+{
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": "https://raw.githubusercontent.com/ArtiomsHosting/eggs/main/nodejs/egg-nodejs.json"
+    },
+    "name": "Node.js",
+    "author": "JustArtiom@users.noreply.github.com",
+    "description": "Runs a Node.js app or script from uploaded files or a Git repository. Dependencies are installed with npm, pnpm or Yarn when the server starts.",
+    "features": null,
+    "docker_images": {
+        "Node.js 26": "ghcr.io/artiomshosting/yolks:nodejs_26"
+    },
+    "file_denylist": [],
+    "startup": "start-app",
+    "config": {
+        "files": "{}",
+        "startup": "{\"done\":[\"[System] App starting\"]}",
+        "logs": "{}",
+        "stop": "^SIGINT"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/bash\nset -euo pipefail\n\nlog() {\n    printf '[System] %s\\n' \"$1\"\n}\n\ngit_with_credentials() {\n    local -a options=(-c safe.directory=/mnt/server)\n\n    if [[ -n \"${GIT_TOKEN:-}\" ]]; then\n        options+=(\n            -c credential.helper=\n            -c 'credential.helper=!f() { echo \"username=${GIT_USERNAME:-x-access-token}\"; echo \"password=${GIT_TOKEN}\"; }; f'\n        )\n    fi\n\n    git \"${options[@]}\" \"$@\"\n}\n\nwrite_starter_app() {\n    cat > index.js <<'EOF'\nconst http = require('node:http');\n\nconst port = Number(process.env.SERVER_PORT) || 3000;\n\nhttp.createServer((request, response) => {\n    response.end('Your Node.js server is running. Upload your files or set a Git repository to replace this page.\\n');\n}).listen(port, '0.0.0.0', () => {\n    console.log(`Listening on port ${port}`);\n});\nEOF\n}\n\nmkdir -p /mnt/server\ncd /mnt/server\n\nif [[ -z \"${GIT_ADDRESS:-}\" ]]; then\n    if [[ -z \"$(ls -A)\" ]]; then\n        write_starter_app\n        log 'Created a starter index.js. Upload your files or set a Git repository and reinstall.'\n    else\n        log 'No Git repository set, keeping the existing files.'\n    fi\n    exit 0\nfi\n\nif [[ -d .git ]]; then\n    log \"Updating the existing checkout of ${GIT_ADDRESS}\"\n    if ! git_with_credentials pull --ff-only; then\n        log 'Could not update the checkout, keeping the existing files.'\n    fi\n    exit 0\nfi\n\nif [[ -n \"$(ls -A)\" ]]; then\n    log 'The server already has files but no Git checkout, so nothing was cloned. Delete the files and reinstall to clone the repository.'\n    exit 0\nfi\n\nclone_args=(clone --depth 1)\nif [[ -n \"${BRANCH:-}\" ]]; then\n    clone_args+=(--branch \"$BRANCH\")\nfi\n\nlog \"Cloning ${GIT_ADDRESS}\"\nif ! git_with_credentials \"${clone_args[@]}\" \"$GIT_ADDRESS\" .; then\n    log 'Cloning failed. Check the repository address, the branch and the access token.'\n    exit 1\nfi\n\nlog 'Repository cloned. Dependencies are installed when the server starts.'\n",
+            "container": "ghcr.io/artiomshosting/yolks:installer_debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "Git repository",
+            "description": "HTTPS address of a Git repository to clone on install, for example https://github.com/you/your-bot. Leave empty to upload files yourself.",
+            "env_variable": "GIT_ADDRESS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:255|starts_with:https://"
+        },
+        {
+            "name": "Git branch",
+            "description": "Branch to clone. Leave empty for the repository's default branch.",
+            "env_variable": "BRANCH",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:100"
+        },
+        {
+            "name": "Git username",
+            "description": "Username for a private repository. Leave empty for public repositories.",
+            "env_variable": "GIT_USERNAME",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:100"
+        },
+        {
+            "name": "Git access token",
+            "description": "Personal access token for a private repository. It is passed to Git when needed and never saved in the repository's files.",
+            "env_variable": "GIT_TOKEN",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:255"
+        },
+        {
+            "name": "Auto update",
+            "description": "Pull the latest commit from the Git repository every time the server starts.",
+            "env_variable": "AUTO_UPDATE",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|boolean"
+        },
+        {
+            "name": "Install dependencies",
+            "description": "Install the dependencies from package.json every time the server starts.",
+            "env_variable": "INSTALL_DEPS",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|boolean"
+        },
+        {
+            "name": "Package manager",
+            "description": "Package manager for installing dependencies. Auto picks one from the lockfile and falls back to npm.",
+            "env_variable": "PACKAGE_MANAGER",
+            "default_value": "auto",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|in:auto,npm,pnpm,yarn"
+        },
+        {
+            "name": "Main file",
+            "description": "File to start with Node.js, for example index.js or src/bot.ts.",
+            "env_variable": "MAIN_FILE",
+            "default_value": "index.js",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|regex:/^[\\w.\\/-]{1,128}$/"
+        },
+        {
+            "name": "Node.js arguments",
+            "description": "Extra arguments for Node.js, for example --max-old-space-size=256.",
+            "env_variable": "NODE_ARGS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:255"
+        },
+        {
+            "name": "Start command",
+            "description": "Custom command to run instead of the main file, for example npm run start. Leave empty to start the main file.",
+            "env_variable": "START_COMMAND",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:512"
+        }
+    ],
+    "tags": [
+        "nodejs"
+    ]
+}
