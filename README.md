@@ -7,6 +7,7 @@ your own panel.
 | Egg | Images | Import |
 | --- | --- | --- |
 | Node.js | Node.js 26, 24, 22, 20 (end of life) | [`nodejs/egg-nodejs.json`](nodejs/egg-nodejs.json) |
+| PostgreSQL | PostgreSQL 18, 17, 16, with pgvector | [`postgres/egg-postgres.json`](postgres/egg-postgres.json) |
 
 ## Importing
 
@@ -39,6 +40,23 @@ alone.
 
 The app gets `PORT` (the server's port), `HOST=0.0.0.0` and `NODE_ENV=production` unless its own `.env`
 defines them, and a Node.js heap limit of 75% of the server's memory. Apps should listen on `HOST:PORT`.
+
+## PostgreSQL
+
+The server starts with `start-postgres` from the image. The database is created on the first start, and the
+console is a `psql` session, so SQL typed into it runs directly. pgvector is included: run
+`CREATE EXTENSION vector;` in a database to use it. Connect from apps with the server's address and port, the
+user and the password. See the [yolks README](https://github.com/ArtiomsHosting/yolks#start-postgres-postgresql-images)
+for the details.
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| Database user (`POSTGRES_USER`) | `postgres` | Superuser created with the database; changing it later doesn't rename it |
+| Database password (`POSTGRES_PASSWORD`) | required | Applied on every start, so it can be changed here |
+| Database name (`POSTGRES_DB`) | `postgres` | Database the console opens, created when missing |
+
+The data lives in `postgres_db`. Reinstalling keeps it. A server can't switch to another major version
+in place: export with `pg_dumpall` and import into a server on the new version.
 
 ## Contributing
 

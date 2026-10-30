@@ -1,0 +1,62 @@
+{
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": "https://raw.githubusercontent.com/ArtiomsHosting/eggs/main/postgres/egg-postgres.json"
+    },
+    "name": "PostgreSQL",
+    "author": "JustArtiom@users.noreply.github.com",
+    "description": "Runs a PostgreSQL database with pgvector included. The console is a psql session, so you can type SQL into it.",
+    "features": null,
+    "docker_images": {
+        "PostgreSQL 18": "ghcr.io/artiomshosting/yolks:postgres_18",
+        "PostgreSQL 17": "ghcr.io/artiomshosting/yolks:postgres_17",
+        "PostgreSQL 16": "ghcr.io/artiomshosting/yolks:postgres_16"
+    },
+    "file_denylist": [],
+    "startup": "start-postgres",
+    "config": {
+        "files": "{}",
+        "startup": "{\"done\":[\"[System] Database ready\"]}",
+        "logs": "{}",
+        "stop": "^SIGINT"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/bash\nset -euo pipefail\n\nlog() {\n    printf '[System] %s\\n' \"$1\"\n}\n\nmkdir -p /mnt/server\n\nif [[ -f /mnt/server/postgres_db/PG_VERSION ]]; then\n    log 'The server already has a database. Reinstalling keeps it as it is.'\n    exit 0\nfi\n\nlog 'The database is created on the first start with the user, password and database name from the startup settings.'\n",
+            "container": "ghcr.io/artiomshosting/yolks:installer_debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "Database user",
+            "description": "Superuser created with the database. Changing it later does not rename the existing user.",
+            "env_variable": "POSTGRES_USER",
+            "default_value": "postgres",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|regex:/^[a-z_][a-z0-9_]{0,62}$/"
+        },
+        {
+            "name": "Database password",
+            "description": "Password of the database user. A new password is applied on the next start.",
+            "env_variable": "POSTGRES_PASSWORD",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|min:8|max:128"
+        },
+        {
+            "name": "Database name",
+            "description": "Database the console opens. It is created on start when it does not exist yet.",
+            "env_variable": "POSTGRES_DB",
+            "default_value": "postgres",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|string|regex:/^[a-z_][a-z0-9_]{0,62}$/"
+        }
+    ],
+    "tags": [
+        "postgresql"
+    ]
+}
