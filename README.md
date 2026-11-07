@@ -55,6 +55,10 @@ for the details.
 | Database password (`POSTGRES_PASSWORD`) | required | Applied on every start, so it can be changed here |
 | Database name (`POSTGRES_DB`) | `postgres` | Database the console opens, created when missing |
 
+SSL is set up automatically with a self-signed certificate. Clients can connect with `sslmode=require` for
+encryption or without SSL; replace `postgres_db/server.crt` and `server.key` with your own certificate if
+clients need to verify it.
+
 The data lives in `postgres_db`. Reinstalling keeps it. A server can't switch to another major version
 in place: export with `pg_dumpall` and import into a server on the new version.
 
