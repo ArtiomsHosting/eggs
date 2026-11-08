@@ -13,7 +13,7 @@
         "Python 3.13": "ghcr.io/artiomshosting/yolks:python_3.13",
         "Python 3.12": "ghcr.io/artiomshosting/yolks:python_3.12",
         "Python 3.11": "ghcr.io/artiomshosting/yolks:python_3.11",
-        "Python 3.10 (end of life)": "ghcr.io/artiomshosting/yolks:python_3.10"
+        "Python 3.10 - end of life": "ghcr.io/artiomshosting/yolks:python_3.10"
     },
     "file_denylist": [],
     "startup": "start-app",

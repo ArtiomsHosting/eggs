@@ -11,7 +11,7 @@
         "Node.js 26": "ghcr.io/artiomshosting/yolks:nodejs_26",
         "Node.js 24": "ghcr.io/artiomshosting/yolks:nodejs_24",
         "Node.js 22": "ghcr.io/artiomshosting/yolks:nodejs_22",
-        "Node.js 20 (end of life)": "ghcr.io/artiomshosting/yolks:nodejs_20"
+        "Node.js 20 - end of life": "ghcr.io/artiomshosting/yolks:nodejs_20"
     },
     "file_denylist": [],
     "startup": "start-app",

@@ -13,6 +13,7 @@ def json_string: type == "string" and ((try fromjson catch null) != null);
     (if (.author | type) == "string" and (.author | test("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")) then empty else "author must be an email address" end),
     (if (.docker_images | type) == "object" and (.docker_images | length) > 0 then empty else "docker_images must list at least one image" end),
     (.docker_images | to_entries[] | select((.value | length) > 191) | "docker image \(.key) is longer than 191 characters"),
+    (.docker_images | keys[] | select(test("^[\\w#./ -]*$") | not) | "docker image name \"\(.)\" may only use letters, numbers, spaces and # . / - (the admin egg form rejects anything else)"),
     (if (.startup | type) == "string" and (.startup | length) > 0 then empty else "startup must be set" end),
     (.config | to_entries[] | select(.key != "stop") | select((.value | json_string) | not) | "config.\(.key) must be a JSON-encoded string"),
     (if (.config.stop | type) == "string" and (.config.stop | length) <= 191 then empty else "config.stop must be a string of at most 191 characters" end),
