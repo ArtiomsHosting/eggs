@@ -1,0 +1,90 @@
+{
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": "https://raw.githubusercontent.com/ArtiomsHosting/eggs/main/nginx/egg-nginx.json"
+    },
+    "name": "Nginx",
+    "author": "JustArtiom@users.noreply.github.com",
+    "description": "Runs an Nginx web server for static sites, PHP sites and reverse proxies, from uploaded files or a Git repository. The PHP images include PHP-FPM and Composer. Type help in the console for the reload and test commands.",
+    "features": null,
+    "docker_images": {
+        "Nginx static": "ghcr.io/artiomshosting/yolks:nginx_static",
+        "Nginx with PHP 8.5": "ghcr.io/artiomshosting/yolks:nginx_php8.5",
+        "Nginx with PHP 8.4": "ghcr.io/artiomshosting/yolks:nginx_php8.4",
+        "Nginx with PHP 8.3": "ghcr.io/artiomshosting/yolks:nginx_php8.3"
+    },
+    "file_denylist": [],
+    "startup": "start-nginx",
+    "config": {
+        "files": "{}",
+        "startup": "{\"done\":[\"[System] Web server ready\"]}",
+        "logs": "{}",
+        "stop": "^SIGINT"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/bash\nset -euo pipefail\n\nreadonly WEB_ROOT=/mnt/server/www\n\nlog() {\n    printf '[System] %s\\n' \"$1\"\n}\n\ngit_with_credentials() {\n    local -a options=(-c \"safe.directory=${WEB_ROOT}\")\n\n    if [[ -n \"${GIT_TOKEN:-}\" ]]; then\n        options+=(\n            -c credential.helper=\n            -c 'credential.helper=!f() { echo \"username=${GIT_USERNAME:-x-access-token}\"; echo \"password=${GIT_TOKEN}\"; }; f'\n        )\n    fi\n\n    git \"${options[@]}\" \"$@\"\n}\n\nmkdir -p \"$WEB_ROOT\"\ncd \"$WEB_ROOT\"\n\nif [[ -z \"${GIT_ADDRESS:-}\" ]]; then\n    log 'No Git repository set. Upload your site to www, or set a Git repository and reinstall.'\n    exit 0\nfi\n\nif [[ -d .git ]]; then\n    log \"Updating the existing checkout of ${GIT_ADDRESS}\"\n    if ! git_with_credentials pull --ff-only; then\n        log 'Could not update the checkout, keeping the existing files.'\n    fi\n    exit 0\nfi\n\nif [[ -n \"$(ls -A)\" ]]; then\n    log 'www already has files but no Git checkout, so nothing was cloned. Delete the files in www and reinstall to clone the repository.'\n    exit 0\nfi\n\nclone_args=(clone --depth 1)\nif [[ -n \"${BRANCH:-}\" ]]; then\n    clone_args+=(--branch \"$BRANCH\")\nfi\n\nlog \"Cloning ${GIT_ADDRESS} into www\"\nif ! git_with_credentials \"${clone_args[@]}\" \"$GIT_ADDRESS\" .; then\n    log 'Cloning failed. Check the repository address, the branch and the access token.'\n    exit 1\nfi\n\nlog 'Repository cloned into www. Composer dependencies are installed when the server starts.'\n",
+            "container": "ghcr.io/artiomshosting/yolks:installer_debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "Git repository",
+            "description": "HTTPS address of a Git repository to clone into www on install, for example https://github.com/you/your-site. Leave empty to upload files yourself.",
+            "env_variable": "GIT_ADDRESS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:255|starts_with:https://"
+        },
+        {
+            "name": "Git branch",
+            "description": "Branch to clone. Leave empty for the repository's default branch.",
+            "env_variable": "BRANCH",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:100"
+        },
+        {
+            "name": "Git username",
+            "description": "Username for a private repository. Leave empty for public repositories.",
+            "env_variable": "GIT_USERNAME",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:100"
+        },
+        {
+            "name": "Git access token",
+            "description": "Personal access token for a private repository. It is passed to Git when needed and never saved in the repository's files.",
+            "env_variable": "GIT_TOKEN",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:255"
+        },
+        {
+            "name": "Auto update",
+            "description": "Pull the latest commit into www every time the server starts.",
+            "env_variable": "AUTO_UPDATE",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|boolean"
+        },
+        {
+            "name": "Install Composer dependencies",
+            "description": "On the PHP images, install the dependencies from www/composer.json when the server starts. Skipped when nothing changed since the last install; delete www/vendor to force a clean install.",
+            "env_variable": "INSTALL_DEPS",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|boolean"
+        }
+    ],
+    "tags": [
+        "nginx"
+    ]
+}

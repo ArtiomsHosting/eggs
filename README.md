@@ -9,6 +9,7 @@ your own panel.
 | Node.js | Node.js 26, 24, 22, 20 (end of life) | [`nodejs/egg-nodejs.json`](nodejs/egg-nodejs.json) |
 | Python | Python 3.15, 3.14, 3.13, 3.12, 3.11, 3.10 (end of life) | [`python/egg-python.json`](python/egg-python.json) |
 | PostgreSQL | PostgreSQL 18, 17, 16, with pgvector | [`postgres/egg-postgres.json`](postgres/egg-postgres.json) |
+| Nginx | Nginx static; Nginx with PHP 8.5, 8.4, 8.3 | [`nginx/egg-nginx.json`](nginx/egg-nginx.json) |
 
 ## Importing
 
@@ -81,6 +82,30 @@ clients need to verify it.
 
 The data lives in `postgres_db`. Reinstalling keeps it. A server can't switch to another major version
 in place: export with `pg_dumpall` and import into a server on the new version.
+
+## Nginx
+
+The server starts with `start-nginx` from the image and serves the files in `www`, at the server's address
+and port. The static image is for HTML sites, built single-page apps and reverse proxies; the PHP images add
+PHP-FPM and Composer for WordPress, Laravel and plain PHP sites (the database runs in a separate server, such
+as the PostgreSQL egg or a panel database). Users can switch between the images at any time. See the
+[yolks README](https://github.com/ArtiomsHosting/yolks#start-nginx-nginx-images) for the details.
+
+On the first start the server gets `nginx/default.conf` (the site configuration) and, on the PHP images,
+`php/php.ini` (PHP settings). Both are the user's to edit; type `reload` in the console to apply changes
+without a restart, or `test` to check them. Keep `include server-port.conf;` in the `server` block: it
+listens on the server's port, whatever it is.
+
+On install the egg clones the Git repository into `www` if one is set; otherwise the server starts empty and
+you upload your site to `www`. A reinstall never deletes files.
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| Git repository, branch, username, access token, auto update | | The same as the Node.js egg, with the repository in `www` |
+| Install Composer dependencies (`INSTALL_DEPS`) | on | PHP images: `composer install --no-dev` from `www/composer.json` on start, skipped when nothing changed |
+
+For a single-page app, change `try_files` in `nginx/default.conf` to `try_files $uri $uri/ /index.html;`. For a
+Laravel app, set `root /home/container/www/public;`.
 
 ## Contributing
 
