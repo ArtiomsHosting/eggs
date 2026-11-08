@@ -1,0 +1,119 @@
+{
+    "meta": {
+        "version": "PTDL_v2",
+        "update_url": "https://raw.githubusercontent.com/ArtiomsHosting/eggs/main/python/egg-python.json"
+    },
+    "name": "Python",
+    "author": "JustArtiom@users.noreply.github.com",
+    "description": "Runs a Python app or script from uploaded files or a Git repository. Dependencies are installed with uv into a virtual environment when the server starts.",
+    "features": null,
+    "docker_images": {
+        "Python 3.15": "ghcr.io/artiomshosting/yolks:python_3.15",
+        "Python 3.14": "ghcr.io/artiomshosting/yolks:python_3.14",
+        "Python 3.13": "ghcr.io/artiomshosting/yolks:python_3.13",
+        "Python 3.12": "ghcr.io/artiomshosting/yolks:python_3.12",
+        "Python 3.11": "ghcr.io/artiomshosting/yolks:python_3.11",
+        "Python 3.10 (end of life)": "ghcr.io/artiomshosting/yolks:python_3.10"
+    },
+    "file_denylist": [],
+    "startup": "start-app",
+    "config": {
+        "files": "{}",
+        "startup": "{\"done\":[\"[System] App starting\"]}",
+        "logs": "{}",
+        "stop": "^SIGINT"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!/bin/bash\nset -euo pipefail\n\nlog() {\n    printf '[System] %s\\n' \"$1\"\n}\n\ngit_with_credentials() {\n    local -a options=(-c safe.directory=/mnt/server)\n\n    if [[ -n \"${GIT_TOKEN:-}\" ]]; then\n        options+=(\n            -c credential.helper=\n            -c 'credential.helper=!f() { echo \"username=${GIT_USERNAME:-x-access-token}\"; echo \"password=${GIT_TOKEN}\"; }; f'\n        )\n    fi\n\n    git \"${options[@]}\" \"$@\"\n}\n\nmkdir -p /mnt/server\ncd /mnt/server\n\nif [[ -z \"${GIT_ADDRESS:-}\" ]]; then\n    log 'No Git repository set. Upload your files, or set a Git repository and reinstall.'\n    exit 0\nfi\n\nif [[ -d .git ]]; then\n    log \"Updating the existing checkout of ${GIT_ADDRESS}\"\n    if ! git_with_credentials pull --ff-only; then\n        log 'Could not update the checkout, keeping the existing files.'\n    fi\n    exit 0\nfi\n\nif [[ -n \"$(ls -A)\" ]]; then\n    log 'The server already has files but no Git checkout, so nothing was cloned. Delete the files and reinstall to clone the repository.'\n    exit 0\nfi\n\nclone_args=(clone --depth 1)\nif [[ -n \"${BRANCH:-}\" ]]; then\n    clone_args+=(--branch \"$BRANCH\")\nfi\n\nlog \"Cloning ${GIT_ADDRESS}\"\nif ! git_with_credentials \"${clone_args[@]}\" \"$GIT_ADDRESS\" .; then\n    log 'Cloning failed. Check the repository address, the branch and the access token.'\n    exit 1\nfi\n\nlog 'Repository cloned. Dependencies are installed when the server starts.'\n",
+            "container": "ghcr.io/artiomshosting/yolks:installer_debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "name": "Git repository",
+            "description": "HTTPS address of a Git repository to clone on install, for example https://github.com/you/your-bot. Leave empty to upload files yourself.",
+            "env_variable": "GIT_ADDRESS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:255|starts_with:https://"
+        },
+        {
+            "name": "Git branch",
+            "description": "Branch to clone. Leave empty for the repository's default branch.",
+            "env_variable": "BRANCH",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:100"
+        },
+        {
+            "name": "Git username",
+            "description": "Username for a private repository. Leave empty for public repositories.",
+            "env_variable": "GIT_USERNAME",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:100"
+        },
+        {
+            "name": "Git access token",
+            "description": "Personal access token for a private repository. It is passed to Git when needed and never saved in the repository's files.",
+            "env_variable": "GIT_TOKEN",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:255"
+        },
+        {
+            "name": "Auto update",
+            "description": "Pull the latest commit from the Git repository every time the server starts.",
+            "env_variable": "AUTO_UPDATE",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|boolean"
+        },
+        {
+            "name": "Install dependencies",
+            "description": "Install dependencies into .venv when the server starts, from uv.lock, then requirements.txt, then pyproject.toml. Skipped when nothing changed since the last install; delete .venv to force a clean install.",
+            "env_variable": "INSTALL_DEPS",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "required|boolean"
+        },
+        {
+            "name": "Main file",
+            "description": "File to start with Python, for example main.py or src/bot.py. Leave empty to start main.py, app.py or bot.py, whichever exists first.",
+            "env_variable": "MAIN_FILE",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|regex:/^[\\w.\\/-]{1,128}$/"
+        },
+        {
+            "name": "Python arguments",
+            "description": "Extra arguments for Python, for example -O.",
+            "env_variable": "PYTHON_ARGS",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:255"
+        },
+        {
+            "name": "Start command",
+            "description": "Custom command to run instead of the main file, for example uvicorn app:app --host 0.0.0.0 --port $PORT. Leave empty to start the main file.",
+            "env_variable": "START_COMMAND",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": "nullable|string|max:512"
+        }
+    ],
+    "tags": [
+        "python"
+    ]
+}

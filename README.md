@@ -7,6 +7,7 @@ your own panel.
 | Egg | Images | Import |
 | --- | --- | --- |
 | Node.js | Node.js 26, 24, 22, 20 (end of life) | [`nodejs/egg-nodejs.json`](nodejs/egg-nodejs.json) |
+| Python | Python 3.15, 3.14, 3.13, 3.12, 3.11, 3.10 (end of life) | [`python/egg-python.json`](python/egg-python.json) |
 | PostgreSQL | PostgreSQL 18, 17, 16, with pgvector | [`postgres/egg-postgres.json`](postgres/egg-postgres.json) |
 
 ## Importing
@@ -40,6 +41,25 @@ alone.
 
 The app gets `PORT` (the server's port), `HOST=0.0.0.0` and `NODE_ENV=production` unless its own `.env`
 defines them, and a Node.js heap limit of 75% of the server's memory. Apps should listen on `HOST:PORT`.
+
+## Python
+
+The server starts with `start-app` from the Python image. On every start it can pull the latest commit,
+installs dependencies into `.venv` with uv when they changed (from `uv.lock`, `requirements.txt` or
+`pyproject.toml`), prints `[System] App starting` and starts the app: the main file, or `main.py`, `app.py`
+or `bot.py`. Install and reinstall work like the Node.js egg. See the
+[yolks README](https://github.com/ArtiomsHosting/yolks#start-app-python-images) for the details.
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| Git repository, branch, username, access token, auto update | | The same as the Node.js egg |
+| Install dependencies (`INSTALL_DEPS`) | on | Install into `.venv` on start, skipped when nothing changed |
+| Main file (`MAIN_FILE`) | empty | File started with Python; empty = `main.py`, `app.py` or `bot.py` |
+| Python arguments (`PYTHON_ARGS`) | empty | Extra arguments for Python |
+| Start command (`START_COMMAND`) | empty | Runs instead of the main file, for example `uvicorn app:app --host 0.0.0.0 --port $PORT` |
+
+The app gets `PORT` (the server's port) and `HOST=0.0.0.0` unless its own `.env` defines them. `python` and
+`pip` in a start command use the server's `.venv` (with a `uv.lock`, use `uv pip` instead of `pip`).
 
 ## PostgreSQL
 
